@@ -1,0 +1,277 @@
+<!--
+====================================================================
+  Project: Breadcrumbs
+  Version: v1.0.0
+  Status: Initial public release
+====================================================================
+
+  Breadcrumbs is a browser-based navigation game inspired by the classic "Wikipedia race" played informally by friends.
+  The core idea is simple:
+    - Start on one article
+    - Reach another article
+    - Use only in-article links
+    - Fewer moves is better
+  Everything runs entirely in the browser.
+
+--------------------------------------------------------------------
+  Author
+--------------------------------------------------------------------
+
+  Created and maintained by:
+    Pavandeep Singh (Pavan)
+
+  Motivation:
+    This started as a casual pub game that my friend Cat and Aiden introduced me to and evolved into a personal experiment in game design, UX polish, and constraint-based play.
+    The goal was not to build a complex system, but to build something focused, readable, and enjoyable with minimal technology.
+
+--------------------------------------------------------------------
+  Technical Notes
+--------------------------------------------------------------------
+
+  - Single-file implementation (HTML + CSS + JavaScript)
+  - Uses the MediaWiki Action API (action=parse)
+  - Designed to run safely on:
+      * GitHub Pages
+      * Local browsers
+      * Static hosting environments
+  - No build step required
+
+  Wikipedia content is fetched live and rendered after:
+    - Removing layout-heavy elements (tables, infoboxes, images)
+    - Restricting navigation to valid article links only
+
+--------------------------------------------------------------------
+  Version History
+--------------------------------------------------------------------
+
+  v1.0.0
+    - Initial playable release
+    - Fixed start and target pages
+    - Link interception and move tracking
+    - Clean UI suitable for public hosting
+    - GitHub Pages friendly
+
+  Planned (future, not implemented here):
+    - Daily challenges
+    - House rules and difficulty tiers
+    - Session stats and personal bests
+    - Shareable run summaries
+    - Optional mobile wrapper
+
+--------------------------------------------------------------------
+  Legal / Attribution
+--------------------------------------------------------------------
+
+  Content provided by Wikipedia and licensed under:
+    Creative Commons Attribution-ShareAlike (CC BY-SA)
+
+  This project is not affiliated with, endorsed by, or sponsored by
+  Wikipedia or the Wikimedia Foundation.
+
+====================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Breadcrumbs</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #111;
+      color: #eee;
+      display: flex;
+      height: 100vh;
+    }
+
+    #wiki {
+      width: 70%;
+      padding: 32px 48px;
+      overflow-y: auto;
+      border-right: 1px solid #333;
+    }
+
+    #panel {
+      width: 30%;
+      padding: 24px;
+      box-sizing: border-box;
+      background: #15151a;
+    }
+
+    h2, h3 {
+      margin-top: 0;
+    }
+
+    a {
+      color: #4ea3ff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .path {
+      font-size: 13px;
+      color: #bbb;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    button {
+      margin-top: 16px;
+      padding: 10px 12px;
+      background: #2a3b55;
+      color: #fff;
+      border: 1px solid #4ea3ff;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #355b8f;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Article display -->
+<div id="wiki">Loading…</div>
+
+<!-- Game panel -->
+<div id="panel">
+  <h2>Breadcrumbs</h2>
+
+  <p><strong>Start:</strong> <span id="start"></span></p>
+  <p><strong>Target:</strong> <span id="target"></span></p>
+  <p><strong>Moves:</strong> <span id="moves">0</span></p>
+
+  <h3>Path</h3>
+  <div class="path" id="path"></div>
+
+  <button id="restartBtn">New run</button>
+</div>
+
+<script>
+/*
+  Breadcrumbs
+  Navigate from one article to another using only in-page links.
+*/
+
+const START_PAGE = "Panama_Canal";
+const TARGET_PAGE = "Banana";
+
+let currentPage = START_PAGE;
+let moves = 0;
+let path = [START_PAGE];
+
+const wikiEl  = document.getElementById("wiki");
+const startEl = document.getElementById("start");
+const targetEl = document.getElementById("target");
+const movesEl = document.getElementById("moves");
+const pathEl  = document.getElementById("path");
+const restartBtn = document.getElementById("restartBtn");
+
+startEl.textContent  = START_PAGE.replace(/_/g, " ");
+targetEl.textContent = TARGET_PAGE.replace(/_/g, " ");
+pathEl.textContent   = START_PAGE.replace(/_/g, " ");
+
+async function loadPage(title) {
+  wikiEl.textContent = "Loading…";
+
+  const url =
+    "https://en.wikipedia.org/w/api.php" +
+    "?action=parse" +
+    "&format=json" +
+    "&origin=*" +
+    "&page=" + encodeURIComponent(title) +
+    "&prop=text";
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.parse) {
+      wikiEl.textContent = "Failed to load article.";
+      return;
+    }
+
+    renderArticle(data.parse.text["*"]);
+    checkWin();
+
+  } catch (err) {
+    wikiEl.textContent = "Network error.";
+    console.error(err);
+  }
+}
+
+function renderArticle(html) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  // remove clutter
+  doc.querySelectorAll(
+    "table, sup, img, figure, nav, .infobox, .metadata, .mw-editsection"
+  ).forEach(e => e.remove());
+
+  // intercept links
+  doc.querySelectorAll("a").forEach(link => {
+    const href = link.getAttribute("href");
+
+    if (!href || !href.startsWith("/wiki/") || href.includes(":")) {
+      link.removeAttribute("href");
+      return;
+    }
+
+    link.addEventListener("click", e => {
+      e.preventDefault();
+      const next = decodeURIComponent(href.replace("/wiki/", ""));
+      goTo(next);
+    });
+  });
+
+  wikiEl.innerHTML = "";
+  wikiEl.append(...doc.body.children);
+  wikiEl.scrollTop = 0;
+}
+
+function goTo(title) {
+  moves++;
+  currentPage = title;
+  path.push(title);
+
+  movesEl.textContent = moves;
+  pathEl.textContent = path.map(p => p.replace(/_/g, " ")).join(" → ");
+
+  loadPage(title);
+}
+
+function checkWin() {
+  if (currentPage === TARGET_PAGE) {
+    alert(`Completed in ${moves} moves`);
+  }
+}
+
+function restart() {
+  moves = 0;
+  currentPage = START_PAGE;
+  path = [START_PAGE];
+
+  movesEl.textContent = "0";
+  pathEl.textContent  = START_PAGE.replace(/_/g, " ");
+
+  loadPage(START_PAGE);
+}
+
+restartBtn.addEventListener("click", restart);
+
+// start game
+loadPage(START_PAGE);
+</script>
+
+</body>
+</html>
+   
