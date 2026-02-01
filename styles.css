@@ -1,28 +1,117 @@
+:root {
+  --bg: #ffffff;
+  --text: #111;
+  --muted: #666;
+  --glass: rgba(255,255,255,0.75);
+  --accent: #007aff;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #f6f6f6;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont,
+               "SF Pro Text", "SF Pro Display",
+               system-ui, sans-serif;
 }
 
 header {
   position: sticky;
   top: 0;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-  padding: 10px;
   z-index: 10;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  padding: 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
-#wiki-root {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-  background: white;
+header .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+header .meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+#goal {
+  font-size: 14px;
+  margin-top: 4px;
 }
 
 #breadcrumbs {
+  margin-top: 6px;
   font-size: 12px;
-  color: #555;
-  overflow-x: auto;
+  color: var(--muted);
   white-space: nowrap;
+  overflow-x: auto;
+}
+
+#wiki-root {
+  max-width: 960px;
+  margin: auto;
+  padding: 20px;
+  background: var(--bg);
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: var(--accent);
+  color: white;
+  font-weight: 500;
+}
+
+#win-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.win-card {
+  background: var(--bg);
+  color: var(--text);
+  padding: 24px;
+  border-radius: 18px;
+  text-align: center;
+  width: 260px;
+}
+
+body.dark {
+  --bg: #0f0f12;
+  --text: #f5f5f7;
+  --muted: #aaa;
+  --glass: rgba(20,20,24,0.75);
+  --accent: #0a84ff;
+}
+
+@media (max-width: 768px) {
+  #wiki-root {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .infobox {
+    float: none !important;
+    width: 100% !important;
+    margin: 0 0 12px 0 !important;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
 }
