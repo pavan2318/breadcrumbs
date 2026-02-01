@@ -1,36 +1,39 @@
 :root {
-  --bg: #f2f2f7;
+  --bg: #f5f5f7;
   --card: #ffffff;
   --text: #111;
   --muted: #6e6e73;
-  --accent: #007aff;
+  --accent: #0a84ff;
 }
+
+/* ---------- BASE ---------- */
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont,
                "SF Pro Text", "SF Pro Display",
                system-ui, sans-serif;
+  background:
+    radial-gradient(circle at top left, #e8f0ff, transparent 40%),
+    radial-gradient(circle at bottom right, #d7f5e9, transparent 45%),
+    var(--bg);
+  color: var(--text);
 }
 
-/* GAME HUD */
+/* ---------- HUD ---------- */
 
 .hud {
   position: sticky;
   top: 12px;
   max-width: 960px;
   margin: 12px auto;
-  padding: 16px;
-  border-radius: 22px;
-  background: linear-gradient(
-    135deg,
-    rgba(0,122,255,0.95),
-    rgba(88,86,214,0.95)
-  );
-  color: white;
-  box-shadow: 0 24px 50px rgba(0,0,0,0.35);
+  padding: 18px;
+  border-radius: 26px;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(30px) saturate(180%);
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.6);
   z-index: 10;
 }
 
@@ -43,56 +46,59 @@ body {
 .hud h1 {
   margin: 0;
   font-size: 22px;
-  letter-spacing: 0.2px;
 }
 
 .hud-row {
   display: flex;
   gap: 10px;
-  align-items: center;
   flex-wrap: wrap;
+  align-items: center;
   margin-top: 10px;
 }
 
-.stat {
-  background: rgba(255,255,255,0.2);
+.pill {
   padding: 6px 12px;
   border-radius: 999px;
   font-size: 13px;
+  background: rgba(0,0,0,0.06);
 }
 
 .mission {
-  background: white;
-  color: #111;
   padding: 6px 14px;
   border-radius: 999px;
   font-weight: 600;
+  background: var(--accent);
+  color: white;
 }
 
+/* ---------- PROGRESS ---------- */
+
 .progress-bar {
-  height: 6px;
-  background: rgba(255,255,255,0.25);
+  height: 4px;
+  background: rgba(0,0,0,0.08);
   border-radius: 999px;
   overflow: hidden;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: white;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #0a84ff, #64d2ff);
+  transition: width 0.35s cubic-bezier(.4,0,.2,1);
 }
 
+/* ---------- BREADCRUMBS ---------- */
+
 #breadcrumbs {
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 12px;
-  opacity: 0.85;
+  color: var(--muted);
   white-space: nowrap;
   overflow-x: auto;
 }
 
-/* WIKI BOARD */
+/* ---------- WIKI BOARD ---------- */
 
 #wiki-root {
   max-width: 960px;
@@ -105,17 +111,11 @@ body {
 }
 
 @keyframes boardIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* LINK FEEL */
+/* ---------- LINK FEEL ---------- */
 
 #wiki-root a {
   text-decoration: none;
@@ -124,7 +124,7 @@ body {
 }
 
 #wiki-root a:hover {
-  background: rgba(0,122,255,0.12);
+  background: rgba(10,132,255,0.15);
   border-radius: 6px;
 }
 
@@ -133,29 +133,7 @@ body {
   filter: grayscale(1);
 }
 
-/* DARK MODE */
-
-body.dark {
-  --bg: #0f0f12;
-  --card: #1c1c1e;
-  --text: #f5f5f7;
-  --muted: #a1a1a6;
-  --accent: #0a84ff;
-}
-
-body.dark .hud {
-  background: linear-gradient(
-    135deg,
-    #0a84ff,
-    #5e5ce6
-  );
-}
-
-body.dark #wiki-root {
-  background: var(--card);
-}
-
-/* FORCE WIKI TO OBEY */
+/* ---------- FORCE WIKI ---------- */
 
 #wiki-root * {
   background-color: transparent !important;
@@ -167,26 +145,62 @@ body.dark #wiki-root {
   background: rgba(0,0,0,0.04) !important;
 }
 
+/* ---------- DARK MODE ---------- */
+
+body.dark {
+  --bg: #0f0f12;
+  --card: #1c1c1e;
+  --text: #f5f5f7;
+  --muted: #a1a1a6;
+  background:
+    radial-gradient(circle at top left, #1c2a4a, transparent 40%),
+    radial-gradient(circle at bottom right, #0f3d2e, transparent 45%),
+    #0f0f12;
+}
+
+body.dark .hud {
+  background: rgba(28,28,30,0.65);
+}
+
+body.dark .pill {
+  background: rgba(255,255,255,0.12);
+}
+
 body.dark #wiki-root table,
 body.dark #wiki-root .infobox {
   background: rgba(255,255,255,0.06) !important;
 }
 
-/* MOBILE */
+/* ---------- MOBILE ---------- */
 
 @media (max-width: 768px) {
-  .hud {
-    margin: 10px;
-  }
+  .hud { margin: 10px; }
+  #wiki-root { margin: 12px; padding: 14px; font-size: 15px; }
+  .infobox { float: none !important; width: 100% !important; }
+}
 
-  #wiki-root {
-    margin: 12px;
-    padding: 14px;
-    font-size: 15px;
-  }
+/* ---------- WIN ---------- */
 
-  .infobox {
-    float: none !important;
-    width: 100% !important;
-  }
+#win-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(25px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.win-card {
+  background: rgba(255,255,255,0.85);
+  border-radius: 28px;
+  padding: 28px;
+  text-align: center;
+  width: 280px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+}
+
+body.dark .win-card {
+  background: rgba(28,28,30,0.9);
 }
