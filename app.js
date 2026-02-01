@@ -6,7 +6,7 @@ const targetEl = document.getElementById("target-name")
 const progressFill = document.getElementById("progress-fill")
 const toggle = document.getElementById("theme-toggle")
 
-/* TEST CONFIG */
+/* GAME CONFIG */
 const START_PAGE = "India"
 const TARGET_PAGE = "Asia"
 
@@ -14,12 +14,13 @@ let breadcrumbs = []
 let moves = 0
 let startTime = Date.now()
 let hasWon = false
+let timerRunning = true
 
 targetEl.textContent = TARGET_PAGE
 
 loadPage(START_PAGE)
 
-/* CORE */
+/* ---------- CORE ---------- */
 
 function loadPage(title) {
   fetch(`https://en.wikipedia.org/api/rest_v1/page/html/${encodeURIComponent(title)}`)
@@ -28,12 +29,12 @@ function loadPage(title) {
       wikiRoot.innerHTML = html
       interceptLinks()
       addBreadcrumb(title)
-      checkWin(title)
+      checkWinFromCanonical()
       animateBoard()
     })
 }
 
-/* LINK CONTROL */
+/* ---------- LINK CONTROL ---------- */
 
 function interceptLinks() {
   wikiRoot.querySelectorAll("a").forEach(a => {
@@ -47,7 +48,7 @@ function interceptLinks() {
       href.includes("Talk") ||
       href.includes("File")
 
-    if (href.startsWith("./") && !blocked) {
+    if (href.startsWith("./") && !blocked && !hasWon) {
       a.onclick = e => {
         e.preventDefault()
         const next = href.replace("./", "").split("#")[0]
@@ -65,7 +66,7 @@ function interceptLinks() {
   })
 }
 
-/* GAME FEEL */
+/* ---------- GAME FEEL ---------- */
 
 function feedback() {
   if (navigator.vibrate) navigator.vibrate(10)
@@ -83,45 +84,52 @@ function updateProgress() {
   progressFill.style.width = pct + "%"
 }
 
-/* STATE */
+/* ---------- STATE ---------- */
 
 function addBreadcrumb(title) {
   breadcrumbs.push(title)
-  breadcrumbsEl.textContent = breadcrumbs.join(" → ")
+  breadcrumbsEl.textContent = breadcrumbs.join("  →  ")
 }
 
-function checkWin(title) {
-  if (title === TARGET_PAGE && !hasWon) {
+function checkWinFromCanonical() {
+  const canonical = document.querySelector('link[rel="canonical"]')
+  if (!canonical || hasWon) return
+
+  const page =
+    decodeURIComponent(canonical.href.split("/wiki/")[1] || "")
+      .replace(/_/g, " ")
+      .toLowerCase()
+
+  if (page === TARGET_PAGE.toLowerCase()) {
     hasWon = true
+    timerRunning = false
     showWin()
   }
 }
 
 function showWin() {
-  document.body.style.background =
-    "radial-gradient(circle at top, #34c759, #0f0f12)"
-
   const overlay = document.createElement("div")
   overlay.id = "win-overlay"
   overlay.innerHTML = `
     <div class="win-card">
-      <h2>🍌 You reached Banana</h2>
-      <p>${moves} moves</p>
-      <p>${Math.floor((Date.now() - startTime) / 1000)} seconds</p>
+      <h2>🎉 Mission complete</h2>
+      <p>You reached <strong>${TARGET_PAGE}</strong></p>
+      <p>${moves} moves · ${Math.floor((Date.now() - startTime) / 1000)}s</p>
       <button onclick="location.reload()">Play again</button>
     </div>
   `
   document.body.appendChild(overlay)
 }
 
-/* TIMER */
+/* ---------- TIMER ---------- */
 
 setInterval(() => {
+  if (!timerRunning) return
   timerEl.textContent =
     `${Math.floor((Date.now() - startTime) / 1000)}s`
 }, 1000)
 
-/* THEME */
+/* ---------- THEME ---------- */
 
 toggle.onclick = () => {
   document.body.classList.toggle("dark")
